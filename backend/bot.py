@@ -12,9 +12,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
     ContextTypes,
-    ConversationHandler,
-    FileHandler,
-    MessageHandler
+    ConversationHandler
 )
 from telegram.constants import ParseMode
 
@@ -394,23 +392,12 @@ def create_bot():
     application.add_handler(CommandHandler("cancel", cancel_conversation))
     application.add_handler(CommandHandler("log", log_pass_handler, patterns=['pass']))
     
-    # Обработчик файла maFile
-    application.add_handler(
-        FileHandler(
-            filters.Document.ANY & filters.Document.Filename(r'.*\.maFile$', mode="ignore"),
-            handle_mafile
-        )
-    )
-    
     # Обработчики для диалога добавления аккаунта
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("add", add_account_start)],
         states={
             ADD_STEP_WAITING_FILE: [
-                FileHandler(
-                    filters.DOCUMENT & filters.Document.Filename(r'.*\.maFile$', mode="ignore"),
-                    handle_mafile
-                )
+                MessageHandler(filters.Document.ANY & filters.Document.Filename(r'.*\.maFile$', mode="ignore"), handle_mafile)
             ],
             ADD_STEP_WAITING_LOGIN: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handle_steam_login)
