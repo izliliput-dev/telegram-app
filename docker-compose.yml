@@ -49,7 +49,7 @@ services:
     networks:
       - sda-network
 
-  nginx:
+  nginx-proxy:
     image: nginx:alpine
     ports:
       - "80:80"
