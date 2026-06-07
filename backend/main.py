@@ -46,13 +46,12 @@ async def lifespan(app: FastAPI):
     """Управление жизненным циклом приложения."""
     # Создание таблиц БД (синхронно)
     import asyncio
-    await asyncio.to_thread(Base.metadata.create_all, sync_engine)
+    await engine.run_sync(Base.metadata.create_all)
     # Синхронизация времени
     steam_utils.update_offset()
     yield
     # Очистка ресурсов при остановке
-    await async_engine.dispose()
-    sync_engine.dispose()
+    await engine.dispose()
 
 
 app = FastAPI(
