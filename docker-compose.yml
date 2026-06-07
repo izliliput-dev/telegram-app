@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - WEB_APP_URL=${WEB_APP_URL}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - STORAGE_PATH=/app/storage
+      - PORT=8000
+    volumes:
+      - ./backend/storage:/app/storage
+    restart: unless-stopped
+    networks:
+      - sda-network
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - REACT_APP_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - sda-network
+
+  bot:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: python bot.py
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - WEB_APP_URL=${WEB_APP_URL}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - STORAGE_PATH=/app/storage
+    volumes:
+      - ./backend/storage:/app/storage
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - sda-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:rw
+      - ./nginx/html:/usr/share/nginx/html:rw
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    networks:
+      - sda-network
+
+networks:
+  sda-network:
+    driver: bridge
