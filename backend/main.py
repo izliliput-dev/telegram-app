@@ -44,14 +44,14 @@ background_tasks: Dict[str, bool] = {}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Управление жизненным циклом приложения."""
-    # Создание таблиц БД (синхронно через sync_engine)
-    await engine.run_sync(Base.metadata.create_all)
+    # Создание таблиц БД с помощью асинхронного engine
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     # Синхронизация времени
     steam_utils.update_offset()
     yield
     # Очистка ресурсов при остановке
     await engine.dispose()
-    sync_engine.dispose()
 
 
 app = FastAPI(
